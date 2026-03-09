@@ -40,12 +40,16 @@ export default function App() {
   
   // 裁剪状态
   const [crop, setCrop] = useState<CropOptions>({ x: 0, y: 0, width: 0, height: 0 });
-  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<number | null>(1);
   const [showGrid, setShowGrid] = useState(true);
   
   // 自定义尺寸
   const [customWidth, setCustomWidth] = useState(0);
   const [customHeight, setCustomHeight] = useState(0);
+  
+  // 目标尺寸（用于导出/下载）
+  const [targetWidth, setTargetWidth] = useState<number | undefined>(undefined);
+  const [targetHeight, setTargetHeight] = useState<number | undefined>(undefined);
   
   // 格式设置
   const [format, setFormat] = useState<ImageFormat>('image/jpeg');
@@ -73,9 +77,11 @@ export default function App() {
         height: img.naturalHeight
       });
       
-      setAspectRatio(null);
+      setAspectRatio(1);
       setCustomWidth(img.naturalWidth);
       setCustomHeight(img.naturalHeight);
+      setTargetWidth(undefined);
+      setTargetHeight(undefined);
     } catch (error) {
       console.error('加载图片失败:', error);
       alert('图片加载失败，请重试');
@@ -92,7 +98,9 @@ export default function App() {
       const options = {
         crop,
         format: 'image/png',
-        quality: 1.0
+        quality: 1.0,
+        targetWidth,
+        targetHeight
       };
       
       const blob = await processImage(image, options);
@@ -108,7 +116,7 @@ export default function App() {
     } finally {
       setIsProcessing(false);
     }
-  }, [image, crop]);
+  }, [image, crop, targetWidth, targetHeight]);
 
   // 重置所有设置
   const handleReset = useCallback(() => {
@@ -123,6 +131,8 @@ export default function App() {
     setTargetSizeKB(null);
     setShowApplied(false);
     setAppliedImage(null);
+    setTargetWidth(undefined);
+    setTargetHeight(undefined);
   }, [image]);
 
   // 处理下载
@@ -136,7 +146,9 @@ export default function App() {
         crop,
         format,
         quality,
-        targetSizeKB: targetSizeKB || undefined
+        targetSizeKB: targetSizeKB || undefined,
+        targetWidth,
+        targetHeight
       };
       
       const blob = await processImage(image, options);
@@ -150,7 +162,7 @@ export default function App() {
     } finally {
       setIsProcessing(false);
     }
-  }, [image, originalFile, crop, format, quality, targetSizeKB]);
+  }, [image, originalFile, crop, format, quality, targetSizeKB, targetWidth, targetHeight]);
 
   // 获取原图大小(KB)
   const originalSizeKB = originalFile ? originalFile.size / 1024 : 0;
@@ -328,9 +340,11 @@ export default function App() {
                   <PresetSelector
                     imageWidth={image.naturalWidth}
                     imageHeight={image.naturalHeight}
-                    onSelect={(newCrop, ratio) => {
+                    onSelect={(newCrop, ratio, tw, th) => {
                       setCrop(newCrop);
                       setAspectRatio(ratio);
+                      setTargetWidth(tw);
+                      setTargetHeight(th);
                     }}
                     customWidth={customWidth}
                     customHeight={customHeight}
@@ -365,6 +379,7 @@ export default function App() {
             <span>
               原图: {image.naturalWidth} × {image.naturalHeight} px
               {crop && ` | 裁剪: ${Math.round(crop.width)} × ${Math.round(crop.height)} px`}
+              {targetWidth && targetHeight && ` | 导出: ${targetWidth} × ${targetHeight} px`}
             </span>
           )}
         </div>

@@ -11,7 +11,7 @@ import { PLATFORM_PRESETS } from '../lib/imageProcessor';
 interface PresetSelectorProps {
   imageWidth: number;
   imageHeight: number;
-  onSelect: (crop: CropOptions, aspectRatio: number) => void;
+  onSelect: (crop: CropOptions, aspectRatio: number, targetWidth: number, targetHeight: number) => void;
   customWidth: number;
   customHeight: number;
   onCustomWidthChange: (width: number) => void;
@@ -38,7 +38,7 @@ export function PresetSelector({
   onCustomHeightChange
 }: PresetSelectorProps) {
   const [activeCategory, setActiveCategory] = useState<Category>('全部');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const categories = useMemo(() => {
     const cats = new Set(PLATFORM_PRESETS.map(p => p.category));
@@ -76,7 +76,7 @@ export function PresetSelector({
       height: cropHeight
     };
     
-    onSelect(crop, aspectRatio);
+    onSelect(crop, aspectRatio, preset.width, preset.height);
   };
 
   const handleCustomApply = () => {
@@ -103,7 +103,7 @@ export function PresetSelector({
         height: cropHeight
       };
       
-      onSelect(crop, aspectRatio);
+      onSelect(crop, aspectRatio, customWidth, customHeight);
     }
   };
 

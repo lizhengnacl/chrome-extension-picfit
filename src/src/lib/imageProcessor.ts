@@ -162,6 +162,42 @@ export function bilinearInterpolation(
 }
 
 /**
+ * 高质量图像缩放 - 渐进式缩小（多步 downsampling）
+ */
+function highQualityResize(
+  srcCanvas: HTMLCanvasElement,
+  targetWidth: number,
+  targetHeight: number
+): HTMLCanvasElement {
+  let currentWidth = srcCanvas.width;
+  let currentHeight = srcCanvas.height;
+  let currentCanvas = srcCanvas;
+
+  while (currentWidth / 2 >= targetWidth && currentHeight / 2 >= targetHeight) {
+    currentWidth = Math.floor(currentWidth / 2);
+    currentHeight = Math.floor(currentHeight / 2);
+    
+    const tempCanvas = createCanvas(currentWidth, currentHeight);
+    const tempCtx = tempCanvas.getContext('2d')!;
+    
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
+    tempCtx.drawImage(currentCanvas, 0, 0, currentWidth, currentHeight);
+    
+    currentCanvas = tempCanvas;
+  }
+
+  const finalCanvas = createCanvas(targetWidth, targetHeight);
+  const finalCtx = finalCanvas.getContext('2d')!;
+  
+  finalCtx.imageSmoothingEnabled = true;
+  finalCtx.imageSmoothingQuality = 'high';
+  finalCtx.drawImage(currentCanvas, 0, 0, targetWidth, targetHeight);
+  
+  return finalCanvas;
+}
+
+/**
  * 处理图片 - 主函数
  * 统一约定：crop 坐标始终表示未变换的原图上的区域！
  * 简化版本：先裁剪，再处理（暂时去掉旋转翻转）
@@ -210,12 +246,54 @@ export async function processImage(
   const canvas = createCanvas(outputWidth, outputHeight);
   const ctx = canvas.getContext('2d')!;
   
-  ctx.drawImage(workingImage, 0, 0, outputWidth, outputHeight);
-  
-  if (targetWidth && targetHeight && 
-      (targetWidth > workingWidth || targetHeight > workingHeight)) {
-    const scaledCanvas = bilinearInterpolation(canvas, targetWidth, targetHeight);
-    return canvasToBlob(scaledCanvas, format, quality, targetSizeKB);
+  if (targetWidth && targetHeight) {
+    const bgColor = format === 'image/jpeg' ? '#ffffff' : 'rgba(255, 255, 255, 0)';
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, outputWidth, outputHeight);
+    
+    const srcAspectRatio = workingWidth / workingHeight;
+    const targetAspectRatio = outputWidth / outputHeight;
+    
+    let drawWidth: number;
+    let drawHeight: number;
+    let offsetX: number;
+    let offsetY: number;
+    
+    if (srcAspectRatio > targetAspectRatio) {
+      drawWidth = outputWidth;
+      drawHeight = outputWidth / srcAspectRatio;
+      offsetX = 0;
+      offsetY = (outputHeight - drawHeight) / 2;
+    } else {
+      drawHeight = outputHeight;
+      drawWidth = outputHeight * srcAspectRatio;
+      offsetX = (outputWidth - drawWidth) / 2;
+      offsetY = 0;
+    }
+    
+    if (drawWidth < workingWidth || drawHeight < workingHeight) {
+      const tempCanvas = createCanvas(workingWidth, workingHeight);
+      const tempCtx = tempCanvas.getContext('2d')!;
+      tempCtx.drawImage(workingImage, 0, 0);
+      
+      const resizedCanvas = highQualityResize(tempCanvas, Math.round(drawWidth), Math.round(drawHeight));
+      ctx.drawImage(resizedCanvas, offsetX, offsetY);
+    } else if (drawWidth > workingWidth || drawHeight > workingHeight) {
+      const tempCanvas = createCanvas(workingWidth, workingHeight);
+      const tempCtx = tempCanvas.getContext('2d')!;
+      tempCtx.drawImage(workingImage, 0, 0);
+      
+      const resizedCanvas = bilinearInterpolation(tempCanvas, Math.round(drawWidth), Math.round(drawHeight));
+      ctx.drawImage(resizedCanvas, offsetX, offsetY);
+    } else {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(workingImage, offsetX, offsetY, drawWidth, drawHeight);
+    }
+  } else {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(workingImage, 0, 0, outputWidth, outputHeight);
   }
   
   return canvasToBlob(canvas, format, quality, targetSizeKB);
