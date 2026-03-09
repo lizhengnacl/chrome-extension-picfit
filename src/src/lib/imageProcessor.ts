@@ -36,6 +36,12 @@ const 不限 = 0;
 
 // 平台预设尺寸
 export const PLATFORM_PRESETS: PlatformPreset[] = [
+  // Chrome插件
+  { name: '屏幕截图 (大)', category: 'Chrome插件', width: 1280, height: 800 },
+  { name: '屏幕截图 (小)', category: 'Chrome插件', width: 640, height: 400 },
+  { name: '小型宣传图块', category: 'Chrome插件', width: 440, height: 280 },
+  { name: '顶部宣传图块', category: 'Chrome插件', width: 1400, height: 560 },
+  
   // 社交媒体
   { name: '微信头像', category: '社交媒体', width: 200, height: 200, description: '圆形头像' },
   { name: '微信朋友圈封面', category: '社交媒体', width: 720, height: 720, description: '正方形' },

@@ -4,23 +4,24 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { ChevronDown, Monitor, ShoppingBag, Briefcase, Settings } from 'lucide-react';
+import { ChevronDown, Monitor, ShoppingBag, Briefcase, Settings, Puzzle } from 'lucide-react';
 import type { PlatformPreset, CropOptions } from '../lib/imageProcessor';
 import { PLATFORM_PRESETS } from '../lib/imageProcessor';
 
 interface PresetSelectorProps {
   imageWidth: number;
   imageHeight: number;
-  onSelect: (crop: CropOptions) => void;
+  onSelect: (crop: CropOptions, aspectRatio: number) => void;
   customWidth: number;
   customHeight: number;
   onCustomWidthChange: (width: number) => void;
   onCustomHeightChange: (height: number) => void;
 }
 
-type Category = '全部' | '社交媒体' | '电商平台' | '求职简历' | '自定义';
+type Category = '全部' | 'Chrome插件' | '社交媒体' | '电商平台' | '求职简历' | '自定义';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  'Chrome插件': <Puzzle size={16} />,
   '社交媒体': <Monitor size={16} />,
   '电商平台': <ShoppingBag size={16} />,
   '求职简历': <Briefcase size={16} />,
@@ -75,7 +76,7 @@ export function PresetSelector({
       height: cropHeight
     };
     
-    onSelect(crop);
+    onSelect(crop, aspectRatio);
   };
 
   const handleCustomApply = () => {
@@ -102,7 +103,7 @@ export function PresetSelector({
         height: cropHeight
       };
       
-      onSelect(crop);
+      onSelect(crop, aspectRatio);
     }
   };
 

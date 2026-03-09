@@ -11,6 +11,7 @@ export default defineConfig({
   output: {
     copy: [
       { from: './src/public', to: './' },
+      { from: './generate-icons.html', to: './' },
     ],
     filenameHash: false,
     assetPrefix: './',

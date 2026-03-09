@@ -73,6 +73,7 @@ export default function App() {
         height: img.naturalHeight
       });
       
+      setAspectRatio(null);
       setCustomWidth(img.naturalWidth);
       setCustomHeight(img.naturalHeight);
     } catch (error) {
@@ -156,14 +157,20 @@ export default function App() {
 
   if (!image) {
     return (
-      <div className="w-[520px] min-h-[600px] bg-white dark:bg-gray-900 flex flex-col extension-popup">
+      <div className="w-[520px] h-full bg-white dark:bg-gray-900 flex flex-col extension-popup">
         {/* 头部 */}
         <header className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M3 9h18M9 21V9" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="3" fill="white" opacity="0.9"/>
+                <rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="#7c3aed" strokeWidth="1.5"/>
+                <line x1="6" y1="12" x2="18" y2="12" stroke="#7c3aed" strokeWidth="1" strokeDasharray="2,1"/>
+                <line x1="12" y1="6" x2="12" y2="18" stroke="#7c3aed" strokeWidth="1" strokeDasharray="2,1"/>
+                <circle cx="6" cy="6" r="1.5" fill="#7c3aed"/>
+                <circle cx="18" cy="6" r="1.5" fill="#7c3aed"/>
+                <circle cx="6" cy="18" r="1.5" fill="#7c3aed"/>
+                <circle cx="18" cy="18" r="1.5" fill="#7c3aed"/>
               </svg>
             </div>
             <div>
@@ -180,32 +187,33 @@ export default function App() {
           {/* 功能简介 */}
           <div className="mt-8 grid grid-cols-3 gap-3">
             <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="w-10 h-10 mx-auto bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <path d="M3 9h18M9 21V9" />
+              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="3" fill="white" opacity="0.9"/>
+                  <rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.5"/>
+                  <line x1="6" y1="12" x2="18" y2="12" stroke="white" strokeWidth="1" strokeDasharray="2,1"/>
+                  <line x1="12" y1="6" x2="12" y2="18" stroke="white" strokeWidth="1" strokeDasharray="2,1"/>
                 </svg>
               </div>
               <p className="text-xs font-medium text-gray-700 dark:text-gray-300">尺寸裁剪</p>
             </div>
             <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="w-10 h-10 mx-auto bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
+              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="3" fill="white" opacity="0.9"/>
+                  <rect x="7" y="7" width="10" height="10" rx="2" fill="none" stroke="white" strokeWidth="1.5"/>
+                  <rect x="9" y="9" width="6" height="6" rx="1" fill="none" stroke="white" strokeWidth="1"/>
                 </svg>
               </div>
               <p className="text-xs font-medium text-gray-700 dark:text-gray-300">压缩/放大</p>
             </div>
             <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="w-10 h-10 mx-auto bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10 9 9 9 8 9" />
+              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="3" fill="white" opacity="0.9"/>
+                  <rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.5"/>
+                  <line x1="8" y1="10" x2="16" y2="10" stroke="white" strokeWidth="1.5"/>
+                  <line x1="8" y1="14" x2="16" y2="14" stroke="white" strokeWidth="1.5"/>
                 </svg>
               </div>
               <p className="text-xs font-medium text-gray-700 dark:text-gray-300">格式转换</p>
@@ -217,14 +225,20 @@ export default function App() {
   }
 
   return (
-    <div className="w-[640px] min-h-[720px] bg-white dark:bg-gray-900 flex flex-col extension-popup">
+    <div className="w-[640px] h-full bg-white dark:bg-gray-900 flex flex-col extension-popup">
       {/* 头部 */}
       <header className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-purple-600 rounded-lg flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18M9 21V9" />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="18" height="18" rx="3" fill="white" opacity="0.9"/>
+              <rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="#7c3aed" strokeWidth="1.5"/>
+              <line x1="6" y1="12" x2="18" y2="12" stroke="#7c3aed" strokeWidth="1" strokeDasharray="2,1"/>
+              <line x1="12" y1="6" x2="12" y2="18" stroke="#7c3aed" strokeWidth="1" strokeDasharray="2,1"/>
+              <circle cx="6" cy="6" r="1.5" fill="#7c3aed"/>
+              <circle cx="18" cy="6" r="1.5" fill="#7c3aed"/>
+              <circle cx="6" cy="18" r="1.5" fill="#7c3aed"/>
+              <circle cx="18" cy="18" r="1.5" fill="#7c3aed"/>
             </svg>
           </div>
           <h1 className="text-base font-bold text-gray-900 dark:text-white">图适配 PicFit</h1>
@@ -327,7 +341,10 @@ export default function App() {
                   <PresetSelector
                     imageWidth={image.naturalWidth}
                     imageHeight={image.naturalHeight}
-                    onSelect={setCrop}
+                    onSelect={(newCrop, ratio) => {
+                      setCrop(newCrop);
+                      setAspectRatio(ratio);
+                    }}
                     customWidth={customWidth}
                     customHeight={customHeight}
                     onCustomWidthChange={setCustomWidth}

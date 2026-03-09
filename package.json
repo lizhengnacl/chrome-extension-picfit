@@ -22,6 +22,7 @@
   "scripts": {
     "dev": "rsbuild dev --open",
     "build": "rsbuild build",
-    "preview": "rsbuild preview"
+    "preview": "rsbuild preview",
+    "generate-icons": "open generate-icons.html"
   }
 }
