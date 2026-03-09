@@ -21,6 +21,7 @@ export default defineConfig({
   },
   html: {
     title: '图适配 (PicFit)',
+    template: './src/index.html',
   },
   tools: {
     postcss: {
