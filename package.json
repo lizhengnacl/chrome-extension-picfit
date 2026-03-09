@@ -1,5 +1,5 @@
 {
-  "name": "图裁通",
+  "name": "图适配 (PicFit)",
   "version": "1.0.0",
   "dependencies": {
     "lucide-react": "0.294.0",

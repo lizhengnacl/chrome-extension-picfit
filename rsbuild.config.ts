@@ -12,6 +12,15 @@ export default defineConfig({
     copy: [
       { from: './src/public', to: './' },
     ],
+    filenameHash: false,
+    assetPrefix: './',
+    sourceMap: {
+      js: 'source-map',
+      css: true,
+    },
+  },
+  html: {
+    title: '图适配 (PicFit)',
   },
   tools: {
     postcss: {

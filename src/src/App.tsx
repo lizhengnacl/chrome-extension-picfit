@@ -137,7 +137,7 @@ export default function App() {
 
   if (!image) {
     return (
-      <div className="w-[480px] h-[600px] bg-white dark:bg-gray-900 flex flex-col">
+      <div className="w-[520px] min-h-[600px] bg-white dark:bg-gray-900 flex flex-col extension-popup">
         {/* 头部 */}
         <header className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ export default function App() {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">智能图片裁剪</h1>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">图适配 PicFit</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">快速满足各平台图片要求</p>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-[600px] h-[700px] bg-white dark:bg-gray-900 flex flex-col">
+    <div className="w-[640px] min-h-[720px] bg-white dark:bg-gray-900 flex flex-col extension-popup">
       {/* 头部 */}
       <header className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export default function App() {
               <path d="M3 9h18M9 21V9" />
             </svg>
           </div>
-          <h1 className="text-base font-bold text-gray-900 dark:text-white">智能图片裁剪</h1>
+          <h1 className="text-base font-bold text-gray-900 dark:text-white">图适配 PicFit</h1>
         </div>
         <button
           onClick={() => {

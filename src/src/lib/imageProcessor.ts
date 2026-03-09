@@ -32,6 +32,8 @@ export interface PlatformPreset {
   description?: string;
 }
 
+const 不限 = 0;
+
 // 平台预设尺寸
 export const PLATFORM_PRESETS: PlatformPreset[] = [
   // 社交媒体
@@ -57,8 +59,6 @@ export const PLATFORM_PRESETS: PlatformPreset[] = [
   { name: 'LinkedIn头像', category: '求职简历', width: 400, height: 400 },
   { name: 'LinkedIn封面', category: '求职简历', width: 1584, height: 396 },
 ];
-
-const 不限 = 0;
 
 /**
  * 加载图片文件为Image对象

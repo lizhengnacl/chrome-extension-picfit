@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "智能图片裁剪工具",
+  "name": "图适配 (PicFit)",
   "version": "1.0.0",
-  "description": "快速满足各种平台上传图片时的尺寸、大小、格式要求",
+  "description": "PicFit 图适配 - 快速满足各种平台上传图片时的尺寸、大小、格式要求",
   "permissions": [
     "storage",
     "downloads"
@@ -11,3 +11,4 @@
     "default_popup": "index.html"
   }
 }
+
