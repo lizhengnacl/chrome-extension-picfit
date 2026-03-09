@@ -1,58 +1,20 @@
 /**
  * 裁剪编辑器组件
- * 提供图片裁剪、旋转、翻转功能
+ * 提供图片裁剪功能
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { RotateCw, RotateCcw, FlipHorizontal, FlipVertical, Grid3X3, Lock, Unlock } from 'lucide-react';
-import type { CropOptions, PlatformPreset } from '../lib/imageProcessor';
+import { Grid3X3, Lock, Unlock } from 'lucide-react';
+import type { CropOptions } from '../lib/imageProcessor';
 
 interface CropEditorProps {
   image: HTMLImageElement;
   crop: CropOptions;
   onCropChange: (crop: CropOptions) => void;
-  rotation: number;
-  onRotationChange: (rotation: number) => void;
-  flipH: boolean;
-  onFlipHChange: (flip: boolean) => void;
-  flipV: boolean;
-  onFlipVChange: (flip: boolean) => void;
   aspectRatio: number | null;
   onAspectRatioChange: (ratio: number | null) => void;
   showGrid: boolean;
   onShowGridChange: (show: boolean) => void;
-}
-
-/**
- * 将屏幕坐标逆变换为原图坐标
- */
-function screenToImageCoords(
-  x: number,
-  y: number,
-  canvasWidth: number,
-  canvasHeight: number,
-  rotation: number,
-  flipH: boolean,
-  flipV: boolean
-): { x: number; y: number } {
-  let tx = x - canvasWidth / 2;
-  let ty = y - canvasHeight / 2;
-
-  const angle = (-rotation * Math.PI) / 180;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  const rx = tx * cos - ty * sin;
-  const ry = tx * sin + ty * cos;
-  tx = rx;
-  ty = ry;
-
-  tx = flipH ? -tx : tx;
-  ty = flipV ? -ty : ty;
-
-  tx += canvasWidth / 2;
-  ty += canvasHeight / 2;
-
-  return { x: tx, y: ty };
 }
 
 type ResizeHandle = 'tl' | 'tr' | 'bl' | 'br' | null;
@@ -61,12 +23,6 @@ export function CropEditor({
   image,
   crop,
   onCropChange,
-  rotation,
-  onRotationChange,
-  flipH,
-  onFlipHChange,
-  flipV,
-  onFlipVChange,
   aspectRatio,
   onAspectRatioChange,
   showGrid,
@@ -101,35 +57,17 @@ export function CropEditor({
     // 清空画布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 保存上下文状态
-    ctx.save();
-
-    // 应用变换
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
     // 绘制图片
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-    // 恢复上下文状态
-    ctx.restore();
-
-    // 绘制裁剪框（在变换后的坐标系中绘制，但 crop 坐标是原图的）
+    // 绘制裁剪框
     if (crop) {
       const cropX = crop.x * scale;
       const cropY = crop.y * scale;
       const cropW = crop.width * scale;
       const cropH = crop.height * scale;
 
-      // 暗化裁剪区域外 - 在变换后的坐标系中
-      ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-      ctx.translate(-canvas.width / 2, -canvas.height / 2);
-      
+      // 暗化裁剪区域外
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
@@ -174,10 +112,8 @@ export function CropEditor({
       ctx.fillRect(cropX + cropW - handleSize/2, cropY - handleSize/2, handleSize, handleSize);
       ctx.fillRect(cropX - handleSize/2, cropY + cropH - handleSize/2, handleSize, handleSize);
       ctx.fillRect(cropX + cropW - handleSize/2, cropY + cropH - handleSize/2, handleSize, handleSize);
-      
-      ctx.restore();
     }
-  }, [image, crop, rotation, flipH, flipV, showGrid]);
+  }, [image, crop, showGrid]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -187,19 +123,8 @@ export function CropEditor({
     const screenX = e.clientX - rect.left;
     const screenY = e.clientY - rect.top;
 
-    // 将屏幕坐标逆变换为原图坐标
-    const imageCoords = screenToImageCoords(
-      screenX,
-      screenY,
-      canvas.width,
-      canvas.height,
-      rotation,
-      flipH,
-      flipV
-    );
-
-    const x = imageCoords.x / canvasScale;
-    const y = imageCoords.y / canvasScale;
+    const x = screenX / canvasScale;
+    const y = screenY / canvasScale;
 
     // 检查是否点击了角落控制点
     const handleSize = 16;
@@ -228,7 +153,7 @@ export function CropEditor({
       setIsDragging(true);
       setDragStart({ x: x - crop.x, y: y - crop.y });
     }
-  }, [crop, canvasScale, rotation, flipH, flipV]);
+  }, [crop, canvasScale]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!crop) return;
@@ -240,19 +165,8 @@ export function CropEditor({
     const screenX = e.clientX - rect.left;
     const screenY = e.clientY - rect.top;
 
-    // 将屏幕坐标逆变换为原图坐标
-    const imageCoords = screenToImageCoords(
-      screenX,
-      screenY,
-      canvas.width,
-      canvas.height,
-      rotation,
-      flipH,
-      flipV
-    );
-
-    const x = imageCoords.x / canvasScale;
-    const y = imageCoords.y / canvasScale;
+    const x = screenX / canvasScale;
+    const y = screenY / canvasScale;
 
     if (isDragging) {
       const newX = Math.max(0, Math.min(x - dragStart.x, image.naturalWidth - crop.width));
@@ -320,7 +234,7 @@ export function CropEditor({
 
       onCropChange({ x: newX, y: newY, width: newWidth, height: newHeight });
     }
-  }, [isDragging, isResizing, crop, startCrop, dragStart, resizeHandle, image.naturalWidth, image.naturalHeight, canvasScale, rotation, flipH, flipV, aspectRatio, onCropChange]);
+  }, [isDragging, isResizing, crop, startCrop, dragStart, resizeHandle, image.naturalWidth, image.naturalHeight, canvasScale, aspectRatio, onCropChange]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -337,18 +251,8 @@ export function CropEditor({
     const screenX = e.clientX - rect.left;
     const screenY = e.clientY - rect.top;
 
-    const imageCoords = screenToImageCoords(
-      screenX,
-      screenY,
-      canvas.width,
-      canvas.height,
-      rotation,
-      flipH,
-      flipV
-    );
-
-    const x = imageCoords.x / canvasScale;
-    const y = imageCoords.y / canvasScale;
+    const x = screenX / canvasScale;
+    const y = screenY / canvasScale;
 
     const handleSize = 16;
     const handles = [
@@ -375,50 +279,12 @@ export function CropEditor({
     }
 
     canvas.style.cursor = cursor;
-  }, [crop, canvasScale, rotation, flipH, flipV]);
+  }, [crop, canvasScale]);
 
   return (
     <div className="space-y-4">
       {/* 工具栏 */}
       <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <button
-          onClick={() => onRotationChange((rotation - 90) % 360)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-        >
-          <RotateCcw size={16} />
-          左转
-        </button>
-        <button
-          onClick={() => onRotationChange((rotation + 90) % 360)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-        >
-          <RotateCw size={16} />
-          右转
-        </button>
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-        <button
-          onClick={() => onFlipHChange(!flipH)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-            flipH 
-              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 border border-purple-300' 
-              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-          }`}
-        >
-          <FlipHorizontal size={16} />
-          水平翻转
-        </button>
-        <button
-          onClick={() => onFlipVChange(!flipV)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-            flipV 
-              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 border border-purple-300' 
-              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-          }`}
-        >
-          <FlipVertical size={16} />
-          垂直翻转
-        </button>
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
         <button
           onClick={() => onShowGridChange(!showGrid)}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -466,7 +332,6 @@ export function CropEditor({
       {crop && (
         <div className="flex justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
           <span>裁剪尺寸: {Math.round(crop.width)} × {Math.round(crop.height)} px</span>
-          <span>旋转: {rotation}°</span>
         </div>
       )}
     </div>

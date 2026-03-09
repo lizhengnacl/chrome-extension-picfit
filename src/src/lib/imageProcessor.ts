@@ -158,6 +158,7 @@ export function bilinearInterpolation(
 /**
  * 处理图片 - 主函数
  * 统一约定：crop 坐标始终表示未变换的原图上的区域！
+ * 简化版本：先裁剪，再处理（暂时去掉旋转翻转）
  */
 export async function processImage(
   image: HTMLImageElement,
@@ -175,7 +176,6 @@ export async function processImage(
     targetSizeKB
   } = options;
   
-  // 第一步：先从原图裁剪（crop 坐标是原图的！）
   let workingImage: HTMLImageElement | HTMLCanvasElement = image;
   let workingWidth = image.naturalWidth;
   let workingHeight = image.naturalHeight;
@@ -193,7 +193,6 @@ export async function processImage(
     workingHeight = crop.height;
   }
   
-  // 第二步：计算输出尺寸
   let outputWidth = workingWidth;
   let outputHeight = workingHeight;
   
@@ -202,25 +201,11 @@ export async function processImage(
     outputHeight = targetHeight;
   }
   
-  // 处理旋转后的尺寸
-  const isRotated90 = Math.abs(rotation) % 180 === 90;
-  const canvasWidth = isRotated90 ? outputHeight : outputWidth;
-  const canvasHeight = isRotated90 ? outputWidth : outputHeight;
-  
-  // 第三步：创建最终画布，应用变换并绘制
-  const canvas = createCanvas(canvasWidth, canvasHeight);
+  const canvas = createCanvas(outputWidth, outputHeight);
   const ctx = canvas.getContext('2d')!;
   
-  // 应用变换
-  applyTransformations(ctx, canvasWidth, canvasHeight, rotation, flipH, flipV);
+  ctx.drawImage(workingImage, 0, 0, outputWidth, outputHeight);
   
-  // 绘制图片
-  ctx.drawImage(
-    workingImage,
-    -outputWidth / 2, -outputHeight / 2, outputWidth, outputHeight
-  );
-  
-  // 如果需要放大，使用插值算法
   if (targetWidth && targetHeight && 
       (targetWidth > workingWidth || targetHeight > workingHeight)) {
     const scaledCanvas = bilinearInterpolation(canvas, targetWidth, targetHeight);

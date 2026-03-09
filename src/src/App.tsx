@@ -40,9 +40,6 @@ export default function App() {
   
   // 裁剪状态
   const [crop, setCrop] = useState<CropOptions>({ x: 0, y: 0, width: 0, height: 0 });
-  const [rotation, setRotation] = useState(0);
-  const [flipH, setFlipH] = useState(false);
-  const [flipV, setFlipV] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   
@@ -78,10 +75,6 @@ export default function App() {
       
       setCustomWidth(img.naturalWidth);
       setCustomHeight(img.naturalHeight);
-      
-      setRotation(0);
-      setFlipH(false);
-      setFlipV(false);
     } catch (error) {
       console.error('加载图片失败:', error);
       alert('图片加载失败，请重试');
@@ -97,9 +90,6 @@ export default function App() {
     try {
       const options = {
         crop,
-        rotation,
-        flipH,
-        flipV,
         format: 'image/png',
         quality: 1.0
       };
@@ -117,7 +107,7 @@ export default function App() {
     } finally {
       setIsProcessing(false);
     }
-  }, [image, crop, rotation, flipH, flipV]);
+  }, [image, crop]);
 
   // 重置所有设置
   const handleReset = useCallback(() => {
@@ -128,9 +118,6 @@ export default function App() {
       width: image.naturalWidth,
       height: image.naturalHeight
     });
-    setRotation(0);
-    setFlipH(false);
-    setFlipV(false);
     setQuality(0.92);
     setTargetSizeKB(null);
     setShowApplied(false);
@@ -146,9 +133,6 @@ export default function App() {
     try {
       const options = {
         crop,
-        rotation,
-        flipH,
-        flipV,
         format,
         quality,
         targetSizeKB: targetSizeKB || undefined
@@ -165,7 +149,7 @@ export default function App() {
     } finally {
       setIsProcessing(false);
     }
-  }, [image, originalFile, crop, rotation, flipH, flipV, format, quality, targetSizeKB]);
+  }, [image, originalFile, crop, format, quality, targetSizeKB]);
 
   // 获取原图大小(KB)
   const originalSizeKB = originalFile ? originalFile.size / 1024 : 0;
@@ -331,12 +315,6 @@ export default function App() {
                   image={image}
                   crop={crop}
                   onCropChange={setCrop}
-                  rotation={rotation}
-                  onRotationChange={setRotation}
-                  flipH={flipH}
-                  onFlipHChange={setFlipH}
-                  flipV={flipV}
-                  onFlipVChange={setFlipV}
                   aspectRatio={aspectRatio}
                   onAspectRatioChange={setAspectRatio}
                   showGrid={showGrid}
