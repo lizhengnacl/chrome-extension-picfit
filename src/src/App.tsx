@@ -58,6 +58,8 @@ export default function App() {
   // 处理状态
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'crop' | 'format'>('crop');
+  const [showApplied, setShowApplied] = useState(false);
+  const [appliedImage, setAppliedImage] = useState<HTMLImageElement | null>(null);
 
   // 处理文件选择
   const handleFileSelect = useCallback(async (file: File) => {
@@ -86,6 +88,37 @@ export default function App() {
     }
   }, []);
 
+  // 应用裁剪预览
+  const handleApplyCrop = useCallback(async () => {
+    if (!image) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const options = {
+        crop,
+        rotation,
+        flipH,
+        flipV,
+        format: 'image/png',
+        quality: 1.0
+      };
+      
+      const blob = await processImage(image, options);
+      const img = new Image();
+      img.onload = () => {
+        setAppliedImage(img);
+        setShowApplied(true);
+      };
+      img.src = URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('应用裁剪失败:', error);
+      alert('应用裁剪失败，请重试');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [image, crop, rotation, flipH, flipV]);
+
   // 重置所有设置
   const handleReset = useCallback(() => {
     if (!image) return;
@@ -100,6 +133,8 @@ export default function App() {
     setFlipV(false);
     setQuality(0.92);
     setTargetSizeKB(null);
+    setShowApplied(false);
+    setAppliedImage(null);
   }, [image]);
 
   // 处理下载
@@ -253,36 +288,76 @@ export default function App() {
       <main className="flex-1 overflow-y-auto">
         {activeTab === 'crop' ? (
           <div className="p-4 space-y-4">
-            {/* 裁剪编辑器 */}
-            <CropEditor
-              image={image}
-              crop={crop}
-              onCropChange={setCrop}
-              rotation={rotation}
-              onRotationChange={setRotation}
-              flipH={flipH}
-              onFlipHChange={setFlipH}
-              flipV={flipV}
-              onFlipVChange={setFlipV}
-              aspectRatio={aspectRatio}
-              onAspectRatioChange={setAspectRatio}
-              showGrid={showGrid}
-              onShowGridChange={setShowGrid}
-            />
-            
-            {/* 预设选择器 */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">选择预设尺寸</h3>
-              <PresetSelector
-                imageWidth={image.naturalWidth}
-                imageHeight={image.naturalHeight}
-                onSelect={setCrop}
-                customWidth={customWidth}
-                customHeight={customHeight}
-                onCustomWidthChange={setCustomWidth}
-                onCustomHeightChange={setCustomHeight}
-              />
-            </div>
+            {showApplied && appliedImage ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">裁剪预览</h3>
+                  <button
+                    onClick={() => {
+                      setShowApplied(false);
+                      setAppliedImage(null);
+                    }}
+                    className="text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400"
+                  >
+                    返回编辑
+                  </button>
+                </div>
+                <div className="flex justify-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+                  <img
+                    src={appliedImage.src}
+                    alt="裁剪预览"
+                    className="max-w-full max-h-96 object-contain"
+                  />
+                </div>
+                <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+                  预览尺寸: {appliedImage.naturalWidth} × {appliedImage.naturalHeight} px
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* 应用裁剪按钮 */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleApplyCrop}
+                    disabled={isProcessing}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-purple-400 transition-colors"
+                  >
+                    {isProcessing ? '处理中...' : '应用裁剪'}
+                  </button>
+                </div>
+                
+                {/* 裁剪编辑器 */}
+                <CropEditor
+                  image={image}
+                  crop={crop}
+                  onCropChange={setCrop}
+                  rotation={rotation}
+                  onRotationChange={setRotation}
+                  flipH={flipH}
+                  onFlipHChange={setFlipH}
+                  flipV={flipV}
+                  onFlipVChange={setFlipV}
+                  aspectRatio={aspectRatio}
+                  onAspectRatioChange={setAspectRatio}
+                  showGrid={showGrid}
+                  onShowGridChange={setShowGrid}
+                />
+                
+                {/* 预设选择器 */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">选择预设尺寸</h3>
+                  <PresetSelector
+                    imageWidth={image.naturalWidth}
+                    imageHeight={image.naturalHeight}
+                    onSelect={setCrop}
+                    customWidth={customWidth}
+                    customHeight={customHeight}
+                    onCustomWidthChange={setCustomWidth}
+                    onCustomHeightChange={setCustomHeight}
+                  />
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="p-4">

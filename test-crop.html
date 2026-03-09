@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>裁剪坐标测试</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        canvas { border: 1px solid #999; margin: 10px 0; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .log { background: #f5f5f5; padding: 10px; font-family: monospace; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 裁剪坐标问题排查</h1>
+    
+    <div class="test-section">
+        <h2>步骤1：上传测试图片</h2>
+        <input type="file" id="imageInput" accept="image/*">
+    </div>
+    
+    <div class="test-section">
+        <h2>步骤2：选择变换</h2>
+        <button onclick="rotate(-90)">左转90°</button>
+        <button onclick="rotate(90)">右转90°</button>
+        <button onclick="flipHorizontal()">水平翻转</button>
+        <button onclick="flipVertical()">垂直翻转</button>
+        <button onclick="reset()">重置</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>步骤3：查看对比</h2>
+        <div style="display: flex; gap: 20px;">
+            <div>
+                <h3>方案A：先裁剪原图，再变换</h3>
+                <canvas id="canvasA"></canvas>
+            </div>
+            <div>
+                <h3>方案B：先变换整张图，再裁剪</h3>
+                <canvas id="canvasB"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>步骤4：点击画布记录坐标</h2>
+        <canvas id="clickCanvas" width="400" height="300"></canvas>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        let testImage = null;
+        let testRotation = 0;
+        let testFlipH = false;
+        let testFlipV = false;
+        
+        // 测试用的裁剪区域（假设我们要裁图片中心的 200x200）
+        const testCrop = { x: 100, y: 50, width: 200, height: 200 };
+        
+        const logEl = document.getElementById('log');
+        
+        function log(msg) {
+            logEl.innerHTML += msg + '\n';
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            testImage = new Image();
+            testImage.onload = () => {
+                log('图片加载成功: ' + testImage.naturalWidth + 'x' + testImage.naturalHeight);
+                updateClickCanvas();
+                renderTest();
+            };
+            testImage.src = URL.createObjectURL(file);
+        });
+        
+        function rotate(deg) {
+            testRotation = (testRotation + deg) % 360;
+            log('旋转: ' + testRotation + '°');
+            renderTest();
+        }
+        
+        function flipHorizontal() {
+            testFlipH = !testFlipH;
+            log('水平翻转: ' + testFlipH);
+            renderTest();
+        }
+        
+        function flipVertical() {
+            testFlipV = !testFlipV;
+            log('垂直翻转: ' + testFlipV);
+            renderTest();
+        }
+        
+        function reset() {
+            testRotation = 0;
+            testFlipH = false;
+            testFlipV = false;
+            log('重置变换');
+            renderTest();
+        }
+        
+        function applyTransformations(ctx, w, h, rot, fh, fv) {
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate((rot * Math.PI) / 180);
+            ctx.scale(fh ? -1 : 1, fv ? -1 : 1);
+            ctx.translate(-w / 2, -h / 2);
+        }
+        
+        function updateClickCanvas() {
+            if (!testImage) return;
+            const canvas = document.getElementById('clickCanvas');
+            const ctx = canvas.getContext('2d');
+            const scale = Math.min(400 / testImage.naturalWidth, 300 / testImage.naturalHeight);
+            canvas.width = testImage.naturalWidth * scale;
+            canvas.height = testImage.naturalHeight * scale;
+            ctx.save();
+            applyTransformations(ctx, canvas.width, canvas.height, testRotation, testFlipH, testFlipV);
+            ctx.drawImage(testImage, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            
+            // 画测试裁剪框
+            ctx.save();
+            applyTransformations(ctx, canvas.width, canvas.height, testRotation, testFlipH, testFlipV);
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(testCrop.x * scale, testCrop.y * scale, testCrop.width * scale, testCrop.height * scale);
+            ctx.restore();
+        }
+        
+        document.getElementById('clickCanvas').addEventListener('click', (e) => {
+            const canvas = document.getElementById('clickCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const sx = e.clientX - rect.left;
+            const sy = e.clientY - rect.top;
+            
+            log('---');
+            log('屏幕坐标: (' + Math.round(sx) + ', ' + Math.round(sy) + ')');
+            
+            // 逆变换
+            const scale = Math.min(400 / testImage.naturalWidth, 300 / testImage.naturalHeight);
+            let tx = sx - canvas.width / 2;
+            let ty = sy - canvas.height / 2;
+            
+            const angle = (-testRotation * Math.PI) / 180;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const rx = tx * cos - ty * sin;
+            const ry = tx * sin + ty * cos;
+            tx = rx; ty = ry;
+            
+            tx = testFlipH ? -tx : tx;
+            ty = testFlipV ? -ty : ty;
+            tx += canvas.width / 2;
+            ty += canvas.height / 2;
+            
+            log('逆变换后(缩放): (' + Math.round(tx) + ', ' + Math.round(ty) + ')');
+            log('原图坐标: (' + Math.round(tx/scale) + ', ' + Math.round(ty/scale) + ')');
+        });
+        
+        function renderTest() {
+            if (!testImage) return;
+            
+            updateClickCanvas();
+            
+            // ===== 方案A：先裁剪原图，再变换 =====
+            const canvasA = document.getElementById('canvasA');
+            const ctxA = canvasA.getContext('2d');
+            
+            // 先裁剪
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = testCrop.width;
+            cropCanvas.height = testCrop.height;
+            const cropCtx = cropCanvas.getContext('2d');
+            cropCtx.drawImage(testImage, testCrop.x, testCrop.y, testCrop.width, testCrop.height, 0, 0, testCrop.width, testCrop.height);
+            
+            // 再变换
+            const isRot90 = Math.abs(testRotation) % 180 === 90;
+            canvasA.width = isRot90 ? testCrop.height : testCrop.width;
+            canvasA.height = isRot90 ? testCrop.width : testCrop.height;
+            
+            applyTransformations(ctxA, canvasA.width, canvasA.height, testRotation, testFlipH, testFlipV);
+            ctxA.drawImage(cropCanvas, -testCrop.width/2, -testCrop.height/2, testCrop.width, testCrop.height);
+            
+            
+            // ===== 方案B：先变换整张图，再裁剪 =====
+            const canvasB = document.getElementById('canvasB');
+            const ctxB = canvasB.getContext('2d');
+            
+            // 先变换整张图
+            const isRot90B = Math.abs(testRotation) % 180 === 90;
+            const transformedW = isRot90B ? testImage.naturalHeight : testImage.naturalWidth;
+            const transformedH = isRot90B ? testImage.naturalWidth : testImage.naturalHeight;
+            
+            const transformedCanvas = document.createElement('canvas');
+            transformedCanvas.width = transformedW;
+            transformedCanvas.height = transformedH;
+            const transformedCtx = transformedCanvas.getContext('2d');
+            applyTransformations(transformedCtx, transformedW, transformedH, testRotation, testFlipH, testFlipV);
+            transformedCtx.drawImage(testImage, -testImage.naturalWidth/2, -testImage.naturalHeight/2, testImage.naturalWidth, testImage.naturalHeight);
+            
+            // 再裁剪
+            canvasB.width = testCrop.width;
+            canvasB.height = testCrop.height;
+            ctxB.drawImage(transformedCanvas, testCrop.x, testCrop.y, testCrop.width, testCrop.height, 0, 0, testCrop.width, testCrop.height);
+        }
+        
+        log('准备就绪！请上传图片开始测试。');
+    </script>
+</body>
+</html>
