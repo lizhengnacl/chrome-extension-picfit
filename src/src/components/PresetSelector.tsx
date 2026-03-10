@@ -133,8 +133,8 @@ export function PresetSelector({
       {/* 预设列表 */}
       {activeCategory !== '自定义' && (
         <div className={`
-          grid grid-cols-2 gap-2 overflow-hidden transition-all duration-300
-          ${isExpanded ? 'max-h-96' : 'max-h-32'}
+          grid grid-cols-2 gap-2 overflow-y-auto transition-all duration-300
+          ${isExpanded ? 'max-h-[500px]' : 'max-h-32'}
         `}>
           {filteredPresets.map((preset, index) => (
             <button
